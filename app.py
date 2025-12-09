@@ -1,4 +1,5 @@
 import io
+from pathlib import Path
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -17,10 +18,12 @@ def load_timeseries(uploaded_bytes: bytes | None):
         df = pd.read_csv(io.BytesIO(uploaded_bytes))
     else:
         try:
-            df = pd.read_csv("CAvideos.csv")
+            # Cari file relatif terhadap lokasi app.py supaya tidak tergantung cwd
+            data_path = Path(__file__).resolve().parent / "CAvideos.csv"
+            df = pd.read_csv(data_path)
         except FileNotFoundError as exc:
             raise FileNotFoundError(
-                "CAvideos.csv tidak ditemukan. Upload file atau letakkan di direktori yang sama dengan app.py."
+                "CAvideos.csv tidak ditemukan. Upload file lewat sidebar atau letakkan di direktori yang sama dengan app.py."
             ) from exc
 
     ts = (
