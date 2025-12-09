@@ -1,5 +1,3 @@
-import io
-from pathlib import Path
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -10,23 +8,8 @@ import matplotlib.pyplot as plt
 # ======================================================================
 
 @st.cache_data
-def load_timeseries(uploaded_bytes: bytes | None, csv_url: str | None):
-    """
-    Load dataset from (1) uploaded bytes, (2) URL, or (3) local file.
-    """
-    if uploaded_bytes is not None:
-        df = pd.read_csv(io.BytesIO(uploaded_bytes))
-    elif csv_url:
-        df = pd.read_csv(csv_url)
-    else:
-        try:
-            # Cari file relatif terhadap lokasi app.py supaya tidak tergantung cwd
-            data_path = Path(__file__).resolve().parent / "CAvideos.csv"
-            df = pd.read_csv(data_path)
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(
-                "CAvideos.csv tidak ditemukan. Upload file lewat sidebar atau letakkan di direktori yang sama dengan app.py."
-            ) from exc
+def load_timeseries():
+    df = pd.read_csv("CAvideos.csv")
 
     ts = (
         df.groupby("trending_date")["views"]
@@ -87,30 +70,7 @@ st.set_page_config(page_title="TA-10 Simulasi RK4", layout="wide")
 st.title("📊 TA-10 | Simulasi Sistem Dinamis dengan RK4")
 st.subheader("Pertumbuhan Kumulatif Views Trending YouTube (CAvideos)")
 
-# Optional upload if file tidak tersedia di server
-uploaded_file = st.sidebar.file_uploader("Upload CAvideos.csv (opsional)", type=["csv"])
-uploaded_bytes = uploaded_file.getvalue() if uploaded_file else None
-
-csv_url = st.sidebar.text_input(
-    "Atau masukkan URL CSV (opsional)",
-    placeholder="https://raw.githubusercontent.com/.../CAvideos.csv",
-)
-
-data_path = Path(__file__).resolve().parent / "CAvideos.csv"
-
-try:
-    t, y_norm, y_max = load_timeseries(uploaded_bytes, csv_url or None)
-except FileNotFoundError as e:
-    st.error(str(e))
-    st.info(
-        f"Debug info: mencari file di `{data_path}`. "
-        f"Working dir saat ini: `{Path.cwd()}`. "
-        "Pastikan nama file persis `CAvideos.csv` (case-sensitive)."
-    )
-    # Tampilkan isi direktori untuk membantu debug
-    dir_listing = "\n".join(str(p.name) for p in data_path.parent.glob("*"))
-    st.code(dir_listing or "(direktori kosong)")
-    st.stop()
+t, y_norm, y_max = load_timeseries()
 
 # UI parameter input
 st.sidebar.header("Parameter Simulator")
