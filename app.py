@@ -1,3 +1,4 @@
+import io
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -8,8 +9,19 @@ import matplotlib.pyplot as plt
 # ======================================================================
 
 @st.cache_data
-def load_timeseries():
-    df = pd.read_csv("CAvideos.csv")
+def load_timeseries(uploaded_bytes: bytes | None):
+    """
+    Load dataset from uploaded bytes if provided; otherwise from local file.
+    """
+    if uploaded_bytes is not None:
+        df = pd.read_csv(io.BytesIO(uploaded_bytes))
+    else:
+        try:
+            df = pd.read_csv("CAvideos.csv")
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(
+                "CAvideos.csv tidak ditemukan. Upload file atau letakkan di direktori yang sama dengan app.py."
+            ) from exc
 
     ts = (
         df.groupby("trending_date")["views"]
@@ -70,7 +82,15 @@ st.set_page_config(page_title="TA-10 Simulasi RK4", layout="wide")
 st.title("📊 TA-10 | Simulasi Sistem Dinamis dengan RK4")
 st.subheader("Pertumbuhan Kumulatif Views Trending YouTube (CAvideos)")
 
-t, y_norm, y_max = load_timeseries()
+# Optional upload if file tidak tersedia di server
+uploaded_file = st.sidebar.file_uploader("Upload CAvideos.csv (opsional)", type=["csv"])
+uploaded_bytes = uploaded_file.getvalue() if uploaded_file else None
+
+try:
+    t, y_norm, y_max = load_timeseries(uploaded_bytes)
+except FileNotFoundError as e:
+    st.error(str(e))
+    st.stop()
 
 # UI parameter input
 st.sidebar.header("Parameter Simulator")
