@@ -89,10 +89,20 @@ st.subheader("Pertumbuhan Kumulatif Views Trending YouTube (CAvideos)")
 uploaded_file = st.sidebar.file_uploader("Upload CAvideos.csv (opsional)", type=["csv"])
 uploaded_bytes = uploaded_file.getvalue() if uploaded_file else None
 
+data_path = Path(__file__).resolve().parent / "CAvideos.csv"
+
 try:
     t, y_norm, y_max = load_timeseries(uploaded_bytes)
 except FileNotFoundError as e:
     st.error(str(e))
+    st.info(
+        f"Debug info: mencari file di `{data_path}`. "
+        f"Working dir saat ini: `{Path.cwd()}`. "
+        "Pastikan nama file persis `CAvideos.csv` (case-sensitive)."
+    )
+    # Tampilkan isi direktori untuk membantu debug
+    dir_listing = "\n".join(str(p.name) for p in data_path.parent.glob("*"))
+    st.code(dir_listing or "(direktori kosong)")
     st.stop()
 
 # UI parameter input
