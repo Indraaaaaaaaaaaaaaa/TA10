@@ -10,12 +10,14 @@ import matplotlib.pyplot as plt
 # ======================================================================
 
 @st.cache_data
-def load_timeseries(uploaded_bytes: bytes | None):
+def load_timeseries(uploaded_bytes: bytes | None, csv_url: str | None):
     """
-    Load dataset from uploaded bytes if provided; otherwise from local file.
+    Load dataset from (1) uploaded bytes, (2) URL, or (3) local file.
     """
     if uploaded_bytes is not None:
         df = pd.read_csv(io.BytesIO(uploaded_bytes))
+    elif csv_url:
+        df = pd.read_csv(csv_url)
     else:
         try:
             # Cari file relatif terhadap lokasi app.py supaya tidak tergantung cwd
@@ -89,10 +91,15 @@ st.subheader("Pertumbuhan Kumulatif Views Trending YouTube (CAvideos)")
 uploaded_file = st.sidebar.file_uploader("Upload CAvideos.csv (opsional)", type=["csv"])
 uploaded_bytes = uploaded_file.getvalue() if uploaded_file else None
 
+csv_url = st.sidebar.text_input(
+    "Atau masukkan URL CSV (opsional)",
+    placeholder="https://raw.githubusercontent.com/.../CAvideos.csv",
+)
+
 data_path = Path(__file__).resolve().parent / "CAvideos.csv"
 
 try:
-    t, y_norm, y_max = load_timeseries(uploaded_bytes)
+    t, y_norm, y_max = load_timeseries(uploaded_bytes, csv_url or None)
 except FileNotFoundError as e:
     st.error(str(e))
     st.info(
